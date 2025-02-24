@@ -61,9 +61,10 @@ jobs:
           # SSH接続してGitをインストールし、プロジェクトディレクトリに移動
           echo "${{ secrets.PRIVATE_KEY }}" > private_key
           chmod 600 private_key
+          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
           ssh -oStrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} -i private_key "
             cd /var/www/html/プロジェクトディレクトリ &&
-            git init &&
+            git remote remove origin &&
             git remote add origin https://github.com/your-username/your-repository.git &&
             git fetch --prune &&
             git checkout main &&
