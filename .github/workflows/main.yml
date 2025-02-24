@@ -40,6 +40,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-1
 
+      # Gitの認証情報を設定する
+      - name: Set up Git credentials
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global credential.helper store
+          echo "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com" > ~/.git-credentials
+
       # デプロイする
       - name: Deploy
         run: |
@@ -64,22 +72,3 @@ jobs:
 
           # SSHのセキュリティグループを閉じる
           aws ec2 revoke-security-group-ingress --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
-
-      # - name: Deploy
-      #   run: |
-      #     echo "User: ${{ secrets.USER_NAME }}"
-      #     echo "Host: ${{ secrets.HOST_NAME }}"
-      #     echo "Private Key: ${{ secrets.PRIVATE_KEY }}"
-
-      #     # SSHのセキュリティグループを開放する
-      #     aws ec2 authorize-security-group-ingress --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
-
-      #     # SSH接続して、ディストリビューションを判別し git をインストールする
-      #     echo "${{ secrets.PRIVATE_KEY }}" > private_key
-      #     chmod 600 private_key
-      #     ssh -oStrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} -i private_key "cd /var/www/html/プロジェクトディレクトリ && git fetch --prune && git checkout main && git pull origin main"
-
-      #     # ssh -oStrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} -i private_key "if [ -f /etc/redhat-release ]; then sudo yum update -y && sudo yum install -y git; elif [ -f /etc/debian_version ]; then sudo apt-get update -y && sudo apt-get install -y yum && sudo yum install -y git; elif [ -f /etc/SuSE-release ]; then sudo zypper refresh && sudo zypper install -y git; else echo 'Unknown distribution'; fi && sudo mkdir -p /var/www/html/プロジェクトディレクトリ && sudo chown -R ${{ secrets.USER_NAME }}:${{ secrets.USER_NAME }} /var/www/html/プロジェクトディレクトリ && cd /var/www/html/プロジェクトディレクトリ && git fetch --prune && git checkout main && git pull origin main"
-
-      #     # SSHのセキュリティグループを閉じる
-      #     aws ec2 revoke-security-group-ingress --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
