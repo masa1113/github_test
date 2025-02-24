@@ -72,8 +72,9 @@ jobs:
           ssh -oStrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} -i private_key "
             cd /var/www/html/プロジェクトディレクトリ &&
             git fetch --all &&  # すべてのリモートブランチをフェッチ
+            git branch -a &&  # ここでブランチ一覧を表示
             git checkout main &&
-            git pull --rebase origin main  # リモートのmainブランチとリベース
+            git pull --rebase origin main
           "
 
           # SSHのセキュリティグループを閉じる
