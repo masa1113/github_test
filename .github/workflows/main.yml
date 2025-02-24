@@ -50,12 +50,36 @@ jobs:
           # SSHのセキュリティグループを開放する
           aws ec2 authorize-security-group-ingress --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
 
-          # SSH接続して、ディストリビューションを判別し git をインストールする
+          # SSH接続してGitをインストールし、プロジェクトディレクトリに移動
           echo "${{ secrets.PRIVATE_KEY }}" > private_key
           chmod 600 private_key
-          ssh -oStrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} -i private_key "cd /var/www/html/プロジェクトディレクトリ && git fetch --prune && git checkout main && git pull origin main"
-
-          # ssh -oStrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} -i private_key "if [ -f /etc/redhat-release ]; then sudo yum update -y && sudo yum install -y git; elif [ -f /etc/debian_version ]; then sudo apt-get update -y && sudo apt-get install -y yum && sudo yum install -y git; elif [ -f /etc/SuSE-release ]; then sudo zypper refresh && sudo zypper install -y git; else echo 'Unknown distribution'; fi && sudo mkdir -p /var/www/html/プロジェクトディレクトリ && sudo chown -R ${{ secrets.USER_NAME }}:${{ secrets.USER_NAME }} /var/www/html/プロジェクトディレクトリ && cd /var/www/html/プロジェクトディレクトリ && git fetch --prune && git checkout main && git pull origin main"
+          ssh -oStrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} -i private_key "
+            cd /var/www/html/プロジェクトディレクトリ &&
+            git init &&
+            git remote add origin https://github.com/your-username/your-repository.git &&
+            git fetch --prune &&
+            git checkout main &&
+            git pull origin main
+          "
 
           # SSHのセキュリティグループを閉じる
           aws ec2 revoke-security-group-ingress --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+
+      # - name: Deploy
+      #   run: |
+      #     echo "User: ${{ secrets.USER_NAME }}"
+      #     echo "Host: ${{ secrets.HOST_NAME }}"
+      #     echo "Private Key: ${{ secrets.PRIVATE_KEY }}"
+
+      #     # SSHのセキュリティグループを開放する
+      #     aws ec2 authorize-security-group-ingress --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+
+      #     # SSH接続して、ディストリビューションを判別し git をインストールする
+      #     echo "${{ secrets.PRIVATE_KEY }}" > private_key
+      #     chmod 600 private_key
+      #     ssh -oStrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} -i private_key "cd /var/www/html/プロジェクトディレクトリ && git fetch --prune && git checkout main && git pull origin main"
+
+      #     # ssh -oStrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} -i private_key "if [ -f /etc/redhat-release ]; then sudo yum update -y && sudo yum install -y git; elif [ -f /etc/debian_version ]; then sudo apt-get update -y && sudo apt-get install -y yum && sudo yum install -y git; elif [ -f /etc/SuSE-release ]; then sudo zypper refresh && sudo zypper install -y git; else echo 'Unknown distribution'; fi && sudo mkdir -p /var/www/html/プロジェクトディレクトリ && sudo chown -R ${{ secrets.USER_NAME }}:${{ secrets.USER_NAME }} /var/www/html/プロジェクトディレクトリ && cd /var/www/html/プロジェクトディレクトリ && git fetch --prune && git checkout main && git pull origin main"
+
+      #     # SSHのセキュリティグループを閉じる
+      #     aws ec2 revoke-security-group-ingress --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
