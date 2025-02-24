@@ -52,7 +52,7 @@ jobs:
       - name: Add Remote Origin
         run: |
           git remote remove origin
-          git remote add origin https://github.com/your-username/your-repository.git
+          git remote add origin https://github.com/masa1113/github_test.git
 
       # デプロイする
       - name: Deploy
@@ -71,9 +71,9 @@ jobs:
 
           ssh -oStrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} -i private_key "
             cd /var/www/html/プロジェクトディレクトリ &&
-            git fetch --prune &&
+            git fetch --all &&  # すべてのリモートブランチをフェッチ
             git checkout main &&
-            git pull origin main
+            git pull --rebase origin main  # リモートのmainブランチとリベース
           "
 
           # SSHのセキュリティグループを閉じる
