@@ -59,9 +59,11 @@ jobs:
           aws ec2 authorize-security-group-ingress --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
 
           # SSH接続してGitをインストールし、プロジェクトディレクトリに移動
-          echo "${{ secrets.PRIVATE_KEY }}" > private_key
-          chmod 600 private_key
-          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+          # セキュリティグループルールを追加する前に、既存のルールを確認
+          if ! aws ec2 describe-security-groups --group-ids ${{ secrets.EC2_SECURITY_GROUP_ID }} --query "SecurityGroups[0].IpPermissions[?FromPort==`22` && ToPort==`22` && IpProtocol==`tcp` && IpRanges[0].CidrIp==`${{ steps.ip.outputs.ipv4 }}/32`]" | grep -q "CidrIp"; then
+            aws ec2 authorize-security-group-ingress --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+          fi
+          
           ssh -oStrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} -i private_key "
             cd /var/www/html/プロジェクトディレクトリ &&
             git remote remove origin &&
