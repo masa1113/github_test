@@ -48,16 +48,17 @@ jobs:
           git config --global credential.helper store
           echo "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com" > ~/.git-credentials
 
+      # リモートリポジトリの追加
+      - name: Add Remote Origin
+        run: |
+          git remote remove origin
+          git remote add origin https://github.com/your-username/your-repository.git
+
       # デプロイする
       - name: Deploy
         run: |
-          echo "User: ${{ secrets.USER_NAME }}"
-          echo "Host: ${{ secrets.HOST_NAME }}"
-          echo "Private Key: ${{ secrets.PRIVATE_KEY }}"
-
           # SSHのセキュリティグループを開放する
-          # セキュリティグループルールを追加する前に、既存のルールを確認
-          aws ec2 describe-security-groups --group-ids ${{ secrets.EC2_SECURITY_GROUP_ID }} --query "SecurityGroups[0].IpPermissions[?FromPort==\`22\` && ToPort==\`22\` && IpProtocol=='tcp' && IpRanges[0].CidrIp=='${{ steps.ip.outputs.ipv4 }}/32']" --output text
+          existing_rule=$(aws ec2 describe-security-groups --group-ids ${{ secrets.EC2_SECURITY_GROUP_ID }} --query "SecurityGroups[0].IpPermissions[?FromPort==\`22\` && ToPort==\`22\` && IpProtocol=='tcp' && IpRanges[0].CidrIp=='${{ steps.ip.outputs.ipv4 }}/32']" --output text)
           if [ -z "$existing_rule" ]; then
             aws ec2 authorize-security-group-ingress --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
           else
@@ -70,8 +71,6 @@ jobs:
 
           ssh -oStrictHostKeyChecking=no ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} -i private_key "
             cd /var/www/html/プロジェクトディレクトリ &&
-            git remote remove origin &&
-            git remote add origin https://github.com/your-username/your-repository.git &&
             git fetch --prune &&
             git checkout main &&
             git pull origin main
